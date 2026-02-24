@@ -1,0 +1,36 @@
+# Example GitHub Actions workflow for FastAPI + MongoDB
+name: CI
+
+on:
+  push:
+    branches: [main, feature/*]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6
+        ports:
+          - 27017:27017
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint
+        run: |
+          pip install black
+          black --check src/
+      - name: Test API (basic)
+        run: |
+          pip install httpx
+          python -c "import httpx; r = httpx.get('http://localhost:8000/activities'); print(r.status_code)"
+        continue-on-error: true
